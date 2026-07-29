@@ -8,7 +8,10 @@ import { Spacing, CornerRadius, BottomTabInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { getSpentToday, getSpentThisWeek, getSpentTodayByCategory } from '@/database/expenseService';
-import { CategoryType } from '@/types';
+import { getGoals } from '@/database/goalsService';
+import { getRecurringExpenses } from '@/database/recurringService';
+import { calculateWeeklyGoalContributions, calculateSafeToSpendToday } from '@/analytics/safeToSpend';
+import { CategoryType, RecurringExpense } from '@/types';
 
 const CATEGORY_ICONS: Record<CategoryType, string> = {
   Food: 'fast-food',
@@ -33,8 +36,10 @@ export default function HomeScreen() {
   const [spentToday, setSpentToday] = useState(0);
   const [spentThisWeek, setSpentThisWeek] = useState(0);
   const [todayCategories, setTodayCategories] = useState<{ category: CategoryType; total: number }[]>([]);
+  const [weeklySavingsContribution, setWeeklySavingsContribution] = useState(0);
+  const [recurringDueThisWeek, setRecurringDueThisWeek] = useState(0);
 
-  // Calculate default budget limit: (Income - Savings) / 4.33
+  // Calculate default budget limit: (Income - Savings Goal) / 4.33
   // If income is zero, default to a standard limit of 400
   const monthlyFlexible = Math.max(0, monthlyIncome - monthlySavingsGoal);
   const weeklyLimit = monthlyIncome > 0 ? Math.round(monthlyFlexible / 4.33) : 400;
@@ -48,12 +53,51 @@ export default function HomeScreen() {
 
   const daysRemaining = getDaysRemaining();
 
-  // Safe to Spend Today formula (refined in Phase 4)
-  const remainingWeeklyBudget = Math.max(0, weeklyLimit - spentThisWeek);
-  const safeToSpendToday = Math.round(remainingWeeklyBudget / daysRemaining);
+  // Helper to determine recurring bills due during the remaining days of this week
+  const getRecurringDueThisWeekAmount = (bills: RecurringExpense[]): number => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? 0 : 7); // Next Sunday
+    const sunday = new Date(today);
+    sunday.setDate(diff);
+    sunday.setHours(23, 59, 59, 999);
+
+    let sum = 0;
+    for (const bill of bills) {
+      if (!bill.active) continue;
+      try {
+        const nextDate = new Date(bill.nextExpectedDate + 'T00:00:00');
+        if (nextDate >= today && nextDate <= sunday) {
+          sum += bill.amount;
+        }
+      } catch (e) {
+        // ignore invalid dates
+      }
+    }
+    return sum;
+  };
+
+  // Safe to Spend Today calculations
+  const safeToSpendToday = Math.round(
+    calculateSafeToSpendToday({
+      weeklyLimit,
+      spentThisWeek,
+      daysRemaining,
+      recurringDueThisWeek,
+      weeklySavingsContribution,
+    })
+  );
+
+  const remainingWeeklyBudget = Math.max(
+    0,
+    weeklyLimit - spentThisWeek - recurringDueThisWeek - weeklySavingsContribution
+  );
 
   const refreshDashboard = useCallback(() => {
     try {
+      // 1. Fetch spending aggregates
       const todayTotal = getSpentToday();
       const weekTotal = getSpentThisWeek();
       const todayCats = getSpentTodayByCategory();
@@ -61,6 +105,17 @@ export default function HomeScreen() {
       setSpentToday(todayTotal);
       setSpentThisWeek(weekTotal);
       setTodayCategories(todayCats);
+
+      // 2. Fetch active savings goals and calculate weekly rates
+      const activeGoals = getGoals();
+      const weeklySavings = calculateWeeklyGoalContributions(activeGoals);
+      setWeeklySavingsContribution(weeklySavings);
+
+      // 3. Fetch active recurring bills and sum those due this week
+      const bills = getRecurringExpenses(true);
+      const billsDue = getRecurringDueThisWeekAmount(bills);
+      setRecurringDueThisWeek(billsDue);
+
     } catch (error) {
       console.error('[Dashboard] Failed to refresh aggregates:', error);
     }
@@ -73,7 +128,8 @@ export default function HomeScreen() {
     }, [refreshDashboard])
   );
 
-  const progressPercent = weeklyLimit > 0 ? Math.min(100, (spentThisWeek / weeklyLimit) * 100) : 0;
+  const totalWeeklyDeduction = spentThisWeek + recurringDueThisWeek + weeklySavingsContribution;
+  const progressPercent = weeklyLimit > 0 ? Math.min(100, (totalWeeklyDeduction / weeklyLimit) * 100) : 0;
 
   return (
     <ThemedView style={styles.container}>
@@ -115,21 +171,37 @@ export default function HomeScreen() {
             {currency}{safeToSpendToday}
           </ThemedText>
           <ThemedText style={styles.cardExplanation} type="small" themeColor="textSecondary">
-            Calculated from {currency}{remainingWeeklyBudget} remaining weekly flexible budget and {daysRemaining} days left in this cycle.
+            Based on {currency}{remainingWeeklyBudget.toFixed(0)} remaining flexible budget and {daysRemaining} days left in your cycle.
           </ThemedText>
         </View>
 
         {/* Weekly Budget Progress Card */}
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.cardSubtitle}>
-            THIS WEEK
+            THIS WEEK'S BUDGET SUMMARY
           </ThemedText>
+          
+          <View style={styles.budgetMetricsGrid}>
+            <View style={styles.metricItem}>
+              <ThemedText type="small" themeColor="textSecondary">Spent</ThemedText>
+              <ThemedText style={styles.metricVal}>{currency}{spentThisWeek.toFixed(0)}</ThemedText>
+            </View>
+            <View style={styles.metricItem}>
+              <ThemedText type="small" themeColor="textSecondary">Goals</ThemedText>
+              <ThemedText style={styles.metricVal}>{currency}{weeklySavingsContribution.toFixed(0)}</ThemedText>
+            </View>
+            <View style={styles.metricItem}>
+              <ThemedText type="small" themeColor="textSecondary">Bills Due</ThemedText>
+              <ThemedText style={styles.metricVal}>{currency}{recurringDueThisWeek.toFixed(0)}</ThemedText>
+            </View>
+          </View>
+
           <View style={styles.budgetRow}>
             <ThemedText style={styles.budgetMain}>
-              Spent {currency}{spentThisWeek.toFixed(2)} of {currency}{weeklyLimit}
+              Used {currency}{totalWeeklyDeduction.toFixed(0)} of {currency}{weeklyLimit}
             </ThemedText>
             <ThemedText style={[styles.budgetRemaining, { color: theme.primary }]}>
-              {currency}{remainingWeeklyBudget.toFixed(2)} remaining
+              {currency}{remainingWeeklyBudget.toFixed(0)} remaining
             </ThemedText>
           </View>
           
@@ -171,7 +243,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* AI Insight Placeholder */}
+        {/* AI Insight Card */}
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.insightHeader}>
             <Ionicons name="sparkles" size={18} color={theme.accent} />
@@ -179,13 +251,13 @@ export default function HomeScreen() {
               AI INSIGHT
             </ThemedText>
           </View>
-          {spentThisWeek > (weeklyLimit * 0.7) ? (
+          {totalWeeklyDeduction > (weeklyLimit * 0.8) ? (
             <ThemedText style={styles.insightText}>
-              "You've consumed over 70% of your weekly allowance with {daysRemaining} days left. Consider dialing back non-essential shopping to finish within budget."
+              "Alert: You have used over 80% of your weekly flexible allowance. Reducing discretionary spending for the next {daysRemaining} days is highly recommended."
             </ThemedText>
           ) : (
             <ThemedText style={styles.insightText}>
-              "You are pacing well under your weekly budget. Good job on keeping discretionary spending stable."
+              "You are pacing well under your weekly budget. Great job balancing active expenses, savings goals, and commitments."
             </ThemedText>
           )}
         </View>
@@ -263,6 +335,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  budgetMetricsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    marginBottom: Spacing.two,
+  },
+  metricItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metricVal: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 2,
+  },
   budgetRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -271,11 +360,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
   },
   budgetMain: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   budgetRemaining: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   progressBg: {
