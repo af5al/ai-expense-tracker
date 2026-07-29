@@ -133,6 +133,9 @@ export default function AddExpenseScreen() {
               backgroundColor: nlpInput.trim() ? theme.primary : theme.border,
               opacity: nlpInput.trim() ? 1 : 0.6 
             }]}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Parse natural language input text"
           >
             <ThemedText style={{ color: nlpInput.trim() ? '#fff' : theme.textSecondary, fontWeight: '700' }}>
               Parse Spending
@@ -238,6 +241,9 @@ export default function AddExpenseScreen() {
                 backgroundColor: (amount && description) ? theme.success : theme.border,
                 opacity: (amount && description) ? 1 : 0.6
               }]}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Confirm and save this expense locally"
             >
               <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Save Expense</ThemedText>
             </Pressable>

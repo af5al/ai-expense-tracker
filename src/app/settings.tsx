@@ -114,6 +114,9 @@ export default function SettingsScreen() {
           <Pressable 
             onPress={handleCompleteOnboarding}
             style={[styles.saveButton, { backgroundColor: theme.primary }]}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Save onboarding preferences"
           >
             <ThemedText style={{ color: '#fff', fontWeight: '700' }}>Save & Apply</ThemedText>
           </Pressable>
@@ -159,6 +162,9 @@ export default function SettingsScreen() {
           <Pressable 
             onPress={handleWipeData}
             style={[styles.wipeButton, { borderColor: theme.danger }]}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Delete all local user data and reset the database"
           >
             <Ionicons name="trash-bin-outline" size={16} color={theme.danger} />
             <ThemedText style={{ color: theme.danger, fontWeight: '700' }}>
