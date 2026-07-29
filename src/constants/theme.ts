@@ -1,65 +1,105 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import '@/global.css';
-
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
+    primary: '#6366F1',       // Indigo
+    primaryLight: '#EEF2FF',
+    accent: '#8B5CF6',        // Violet
+    success: '#10B981',       // Emerald
+    warning: '#F59E0B',       // Amber
+    danger: '#EF4444',        // Rose
+    text: '#1F2937',          // Slate 800
+    textSecondary: '#6B7280', // Slate 500
+    background: '#F9FAFB',    // Slate 50
+    card: '#FFFFFF',          // Pure White
+    border: '#E5E7EB',        // Slate 200
+    tabBarBackground: 'rgba(255, 255, 255, 0.85)',
+    cardSelected: '#EEF2FF',
+    moneyHealthGood: '#10B981',
+    moneyHealthAverage: '#F59E0B',
+    moneyHealthPoor: '#EF4444',
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
+    primary: '#818CF8',       // Indigo Light
+    primaryLight: '#1E1B4B',
+    accent: '#A78BFA',        // Violet Light
+    success: '#34D399',       // Emerald Light
+    warning: '#FBBF24',       // Amber Light
+    danger: '#F87171',        // Rose Light
+    text: '#F9FAFB',          // Slate 50
+    textSecondary: '#9CA3AF', // Slate 400
+    background: '#0B0F19',    // Deep Navy Slate
+    card: '#1F2937',          // Slate 800
+    border: '#374151',        // Slate 700
+    tabBarBackground: 'rgba(11, 15, 25, 0.85)',
+    cardSelected: '#1E1B4B',
+    moneyHealthGood: '#34D399',
+    moneyHealthAverage: '#FBBF24',
+    moneyHealthPoor: '#F87171',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColor = keyof typeof Colors.light;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    sans: 'System',
+    serif: 'Georgia',
+    rounded: 'System',
+    mono: 'Courier',
   },
   default: {
-    sans: 'normal',
+    sans: 'sans-serif',
     serif: 'serif',
-    rounded: 'normal',
+    rounded: 'sans-serif',
     mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
   },
 });
 
 export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
+  zero: 0,
+  half: 4,
+  one: 8,
+  two: 12,
   three: 16,
   four: 24,
   five: 32,
-  six: 64,
+  six: 48,
+  seven: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const Shadows = {
+  light: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  dark: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+};
+
+export const BottomTabInset = Platform.select({ ios: 40, android: 60 }) ?? 0;
+export const MaxContentWidth = 720;
+export const CornerRadius = {
+  small: 6,
+  medium: 12,
+  large: 18,
+  round: 9999,
+};
+export const AnimationDuration = {
+  fast: 200,
+  normal: 350,
+  slow: 500,
+};
