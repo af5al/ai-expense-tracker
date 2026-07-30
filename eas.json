@@ -11,6 +11,7 @@
       "distribution": "internal"
     },
     "production": {
+      "buildType": "apk",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://ai-expense-tracker-six-sable.vercel.app/"
       }
