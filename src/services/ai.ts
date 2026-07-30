@@ -1,4 +1,22 @@
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+import Constants from 'expo-constants';
+
+const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  // In development (Expo Go), auto-detect the host machine's IP address
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    if (ip) {
+      return `http://${ip}:3000`;
+    }
+  }
+  return 'http://localhost:3000';
+};
+
+const BASE_URL = getBaseUrl();
+
 
 export interface AIAnalysisResult {
   summary: string;
