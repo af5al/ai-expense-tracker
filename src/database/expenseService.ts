@@ -2,14 +2,14 @@ import { execute, queryAll, queryOne } from './db';
 import { Expense, CategoryType } from '@/types';
 
 /**
- * Insert a new expense into the database.
+ * Insert a new expense into the database asynchronously.
  */
-export function insertExpense(expense: Expense): void {
+export async function insertExpense(expense: Expense): Promise<void> {
   const sql = `
     INSERT INTO expenses (id, amount, description, category, expenseDate, createdAt, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?);
   `;
-  execute(sql, [
+  await execute(sql, [
     expense.id,
     expense.amount,
     expense.description,
@@ -21,15 +21,15 @@ export function insertExpense(expense: Expense): void {
 }
 
 /**
- * Update an existing expense in the database.
+ * Update an existing expense in the database asynchronously.
  */
-export function updateExpense(expense: Expense): void {
+export async function updateExpense(expense: Expense): Promise<void> {
   const sql = `
     UPDATE expenses
     SET amount = ?, description = ?, category = ?, expenseDate = ?, updatedAt = ?
     WHERE id = ?;
   `;
-  execute(sql, [
+  await execute(sql, [
     expense.amount,
     expense.description,
     expense.category,
@@ -40,23 +40,23 @@ export function updateExpense(expense: Expense): void {
 }
 
 /**
- * Delete an expense from the database by its ID.
+ * Delete an expense from the database asynchronously.
  */
-export function deleteExpense(id: string): void {
-  execute('DELETE FROM expenses WHERE id = ?;', [id]);
+export async function deleteExpense(id: string): Promise<void> {
+  await execute('DELETE FROM expenses WHERE id = ?;', [id]);
 }
 
 /**
- * Fetch a single expense by ID.
+ * Fetch a single expense by ID asynchronously.
  */
-export function getExpenseById(id: string): Expense | null {
+export async function getExpenseById(id: string): Promise<Expense | null> {
   return queryOne<Expense>('SELECT * FROM expenses WHERE id = ?;', [id]);
 }
 
 /**
- * Query expenses with search and category filtering, ordered by date (descending).
+ * Query expenses with filters asynchronously, sorted by date.
  */
-export function getExpenses(filters?: { search?: string; category?: string }): Expense[] {
+export async function getExpenses(filters?: { search?: string; category?: string }): Promise<Expense[]> {
   let sql = 'SELECT * FROM expenses';
   const conditions: string[] = [];
   const params: any[] = [];
@@ -81,12 +81,12 @@ export function getExpenses(filters?: { search?: string; category?: string }): E
 }
 
 /**
- * Calculate total spent today.
+ * Calculate total spent today asynchronously.
  */
-export function getSpentToday(): number {
+export async function getSpentToday(): Promise<number> {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
-    const row = queryOne<{ total: number }>('SELECT SUM(amount) as total FROM expenses WHERE expenseDate = ?;', [todayStr]);
+    const row = await queryOne<{ total: number }>('SELECT SUM(amount) as total FROM expenses WHERE expenseDate = ?;', [todayStr]);
     return row?.total || 0;
   } catch (error) {
     console.error('[ExpenseService] getSpentToday failed:', error);
@@ -95,20 +95,20 @@ export function getSpentToday(): number {
 }
 
 /**
- * Calculate total spent this week (starting from Monday).
+ * Calculate total spent this week (starting from Monday) asynchronously.
  */
-export function getSpentThisWeek(): number {
+export async function getSpentThisWeek(): Promise<number> {
   try {
     const d = new Date();
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(d.setDate(diff));
     monday.setHours(0, 0, 0, 0);
     const mondayStr = monday.toISOString().split('T')[0];
     
     const todayStr = new Date().toISOString().split('T')[0];
     
-    const row = queryOne<{ total: number }>('SELECT SUM(amount) as total FROM expenses WHERE expenseDate >= ? AND expenseDate <= ?;', [mondayStr, todayStr]);
+    const row = await queryOne<{ total: number }>('SELECT SUM(amount) as total FROM expenses WHERE expenseDate >= ? AND expenseDate <= ?;', [mondayStr, todayStr]);
     return row?.total || 0;
   } catch (error) {
     console.error('[ExpenseService] getSpentThisWeek failed:', error);
@@ -117,9 +117,9 @@ export function getSpentThisWeek(): number {
 }
 
 /**
- * Get category totals spent today.
+ * Get category totals spent today asynchronously.
  */
-export function getSpentTodayByCategory(): { category: CategoryType; total: number }[] {
+export async function getSpentTodayByCategory(): Promise<{ category: CategoryType; total: number }[]> {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
     const sql = `

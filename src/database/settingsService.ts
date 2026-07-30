@@ -1,11 +1,11 @@
 import { queryOne, execute } from './db';
 
 /**
- * Get a setting from the local settings database table.
+ * Get a setting from the local settings database table asynchronously.
  */
-export function getSetting(key: string, defaultValue: string): string {
+export async function getSetting(key: string, defaultValue: string): Promise<string> {
   try {
-    const row = queryOne<{ value: string }>('SELECT value FROM settings WHERE key = ?', [key]);
+    const row = await queryOne<{ value: string }>('SELECT value FROM settings WHERE key = ?', [key]);
     return row ? row.value : defaultValue;
   } catch (error) {
     console.warn(`[SettingsService] Failed to get setting "${key}", using default.`, error);
@@ -14,11 +14,11 @@ export function getSetting(key: string, defaultValue: string): string {
 }
 
 /**
- * Insert or replace a setting in the local settings database table.
+ * Insert or replace a setting in the local settings database table asynchronously.
  */
-export function setSetting(key: string, value: string): void {
+export async function setSetting(key: string, value: string): Promise<void> {
   try {
-    execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    await execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
   } catch (error) {
     console.error(`[SettingsService] Failed to save setting "${key}":`, error);
   }

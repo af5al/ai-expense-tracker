@@ -44,11 +44,11 @@ export default function AssistantScreen() {
   const [cachedContext, setCachedContext] = useState<any>(null);
 
   // Load and calculate local context on screen focus
-  const loadContext = useCallback(() => {
+  const loadContext = useCallback(async () => {
     try {
-      const spentThisWeek = getSpentThisWeek();
-      const allExpenses = getExpenses();
-      const spentToday = getSpentToday();
+      const spentThisWeek = await getSpentThisWeek();
+      const allExpenses = await getExpenses();
+      const spentToday = await getSpentToday();
       
       const monthlyFlexible = Math.max(0, monthlyIncome - monthlySavingsGoal);
       const weeklyLimit = monthlyIncome > 0 ? Math.round(monthlyFlexible / 4.33) : 400;
@@ -59,14 +59,14 @@ export default function AssistantScreen() {
       const daysRemaining = 8 - mondayBasedDay;
 
       // Savings Goals
-      const activeGoals = getGoals();
+      const activeGoals = await getGoals();
       const weeklyGoalSavings = calculateWeeklyGoalContributions(activeGoals);
       const goalProgress = activeGoals.length > 0 
         ? activeGoals.reduce((sum, g) => sum + g.currentAmount, 0) / activeGoals.reduce((sum, g) => sum + g.targetAmount, 0)
         : 0;
 
       // Active Bills Due
-      const bills = getRecurringExpenses(true);
+      const bills = await getRecurringExpenses(true);
       
       // Calculate Safe to Spend Today
       const safeToSpend = calculateSafeToSpendToday({

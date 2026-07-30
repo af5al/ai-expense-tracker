@@ -2,14 +2,14 @@ import { execute, queryAll, queryOne } from './db';
 import { SavingsGoal } from '@/types';
 
 /**
- * Insert a new savings goal into the database.
+ * Insert a new savings goal asynchronously.
  */
-export function insertGoal(goal: SavingsGoal): void {
+export async function insertGoal(goal: SavingsGoal): Promise<void> {
   const sql = `
     INSERT INTO savings_goals (id, name, targetAmount, currentAmount, targetDate, createdAt)
     VALUES (?, ?, ?, ?, ?, ?);
   `;
-  execute(sql, [
+  await execute(sql, [
     goal.id,
     goal.name,
     goal.targetAmount,
@@ -20,15 +20,15 @@ export function insertGoal(goal: SavingsGoal): void {
 }
 
 /**
- * Update an existing savings goal.
+ * Update an existing savings goal asynchronously.
  */
-export function updateGoal(goal: SavingsGoal): void {
+export async function updateGoal(goal: SavingsGoal): Promise<void> {
   const sql = `
     UPDATE savings_goals
     SET name = ?, targetAmount = ?, currentAmount = ?, targetDate = ?
     WHERE id = ?;
   `;
-  execute(sql, [
+  await execute(sql, [
     goal.name,
     goal.targetAmount,
     goal.currentAmount,
@@ -38,22 +38,22 @@ export function updateGoal(goal: SavingsGoal): void {
 }
 
 /**
- * Update the saved amount of a goal.
+ * Update the saved amount of a goal asynchronously.
  */
-export function updateGoalProgress(id: string, currentAmount: number): void {
-  execute('UPDATE savings_goals SET currentAmount = ? WHERE id = ?;', [currentAmount, id]);
+export async function updateGoalProgress(id: string, currentAmount: number): Promise<void> {
+  await execute('UPDATE savings_goals SET currentAmount = ? WHERE id = ?;', [currentAmount, id]);
 }
 
 /**
- * Delete a goal from the database.
+ * Delete a goal from the database asynchronously.
  */
-export function deleteGoal(id: string): void {
-  execute('DELETE FROM savings_goals WHERE id = ?;', [id]);
+export async function deleteGoal(id: string): Promise<void> {
+  await execute('DELETE FROM savings_goals WHERE id = ?;', [id]);
 }
 
 /**
- * Fetch all savings goals.
+ * Fetch all savings goals asynchronously.
  */
-export function getGoals(): SavingsGoal[] {
+export async function getGoals(): Promise<SavingsGoal[]> {
   return queryAll<SavingsGoal>('SELECT * FROM savings_goals ORDER BY createdAt DESC;');
 }

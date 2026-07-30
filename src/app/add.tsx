@@ -44,7 +44,7 @@ export default function AddExpenseScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       alert('Please enter a valid amount greater than 0.');
@@ -67,7 +67,7 @@ export default function AddExpenseScreen() {
     };
 
     try {
-      insertExpense(newExpense);
+      await insertExpense(newExpense);
       // Reset state
       setNlpInput('');
       setAmount('');

@@ -17,26 +17,26 @@ function mapRow(row: any): RecurringExpense {
 }
 
 /**
- * Fetch all recurring commitments.
+ * Fetch all recurring commitments asynchronously.
  */
-export function getRecurringExpenses(onlyActive: boolean = false): RecurringExpense[] {
+export async function getRecurringExpenses(onlyActive: boolean = false): Promise<RecurringExpense[]> {
   const sql = onlyActive 
     ? 'SELECT * FROM recurring_expenses WHERE active = 1;' 
     : 'SELECT * FROM recurring_expenses;';
   
-  const rows = queryAll<any>(sql);
+  const rows = await queryAll<any>(sql);
   return rows.map(mapRow);
 }
 
 /**
- * Insert a new recurring expense commitment.
+ * Insert a new recurring expense commitment asynchronously.
  */
-export function insertRecurringExpense(rec: RecurringExpense): void {
+export async function insertRecurringExpense(rec: RecurringExpense): Promise<void> {
   const sql = `
     INSERT OR REPLACE INTO recurring_expenses (id, description, amount, category, frequency, nextExpectedDate, active)
     VALUES (?, ?, ?, ?, ?, ?, ?);
   `;
-  execute(sql, [
+  await execute(sql, [
     rec.id,
     rec.description,
     rec.amount,
@@ -48,22 +48,22 @@ export function insertRecurringExpense(rec: RecurringExpense): void {
 }
 
 /**
- * Confirm / Activate a recurring subscription (Layer 2 confirmation).
+ * Confirm / Activate a recurring subscription asynchronously.
  */
-export function activateRecurringExpense(id: string): void {
-  execute('UPDATE recurring_expenses SET active = 1 WHERE id = ?;', [id]);
+export async function activateRecurringExpense(id: string): Promise<void> {
+  await execute('UPDATE recurring_expenses SET active = 1 WHERE id = ?;', [id]);
 }
 
 /**
- * Delete recurring expense.
+ * Delete recurring expense asynchronously.
  */
-export function deleteRecurringExpense(id: string): void {
-  execute('DELETE FROM recurring_expenses WHERE id = ?;', [id]);
+export async function deleteRecurringExpense(id: string): Promise<void> {
+  await execute('DELETE FROM recurring_expenses WHERE id = ?;', [id]);
 }
 
 /**
- * Update next expected billing cycle date.
+ * Update next expected billing cycle date asynchronously.
  */
-export function updateRecurringNextDate(id: string, nextDate: string): void {
-  execute('UPDATE recurring_expenses SET nextExpectedDate = ? WHERE id = ?;', [nextDate, id]);
+export async function updateRecurringNextDate(id: string, nextDate: string): Promise<void> {
+  await execute('UPDATE recurring_expenses SET nextExpectedDate = ? WHERE id = ?;', [nextDate, id]);
 }

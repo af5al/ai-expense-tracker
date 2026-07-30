@@ -40,11 +40,11 @@ export default function PlanScreen() {
   const [goalTargetDate, setGoalTargetDate] = useState(''); // YYYY-MM
 
   // Fetch SQLite aggregates and recalculate health & subscriptions
-  const refreshPlanData = useCallback(() => {
+  const refreshPlanData = useCallback(async () => {
     try {
-      const activeGoals = getGoals();
-      const activeRecurring = getRecurringExpenses();
-      const allExpenses = getExpenses();
+      const activeGoals = await getGoals();
+      const activeRecurring = await getRecurringExpenses();
+      const allExpenses = await getExpenses();
 
       setGoals(activeGoals);
       setRecurringBills(activeRecurring);
@@ -52,7 +52,7 @@ export default function PlanScreen() {
       // 1. Calculate default budget limit: (Income - Savings Goal) / 4.33
       const monthlyFlexible = Math.max(0, monthlyIncome - monthlySavingsGoal);
       const weeklyLimit = monthlyIncome > 0 ? Math.round(monthlyFlexible / 4.33) : 400;
-      const spentThisWeek = getSpentThisWeek();
+      const spentThisWeek = await getSpentThisWeek();
 
       // 2. Fetch daily history for variance
       const dailyMap = getDailySpending(allExpenses);
@@ -124,7 +124,7 @@ export default function PlanScreen() {
     setIsGoalModalVisible(true);
   };
 
-  const handleSaveGoal = () => {
+  const handleSaveGoal = async () => {
     const target = parseFloat(goalTargetAmount);
     const current = parseFloat(goalCurrentAmount) || 0;
 
@@ -151,7 +151,7 @@ export default function PlanScreen() {
         currentAmount: current,
         targetDate: goalTargetDate,
       };
-      updateGoal(updated);
+      await updateGoal(updated);
     } else {
       const created: SavingsGoal = {
         id: generateUUID(),
@@ -161,11 +161,11 @@ export default function PlanScreen() {
         targetDate: goalTargetDate,
         createdAt: now,
       };
-      insertGoal(created);
+      await insertGoal(created);
     }
 
     setIsGoalModalVisible(false);
-    refreshPlanData();
+    await refreshPlanData();
   };
 
   const handleDeleteGoal = (id: string, name: string) => {
@@ -177,9 +177,9 @@ export default function PlanScreen() {
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => {
-            deleteGoal(id);
-            refreshPlanData();
+          onPress: async () => {
+            await deleteGoal(id);
+            await refreshPlanData();
           }
         }
       ]
@@ -187,7 +187,7 @@ export default function PlanScreen() {
   };
 
   // Confirm/Add Suggestion Recurring Commitments
-  const handleConfirmRecurring = (suggestion: RecurringSuggestion) => {
+  const handleConfirmRecurring = async (suggestion: RecurringSuggestion) => {
     const newBill: RecurringExpense = {
       id: generateUUID(),
       description: suggestion.description,
@@ -198,8 +198,8 @@ export default function PlanScreen() {
       active: true,
     };
     try {
-      insertRecurringExpense(newBill);
-      refreshPlanData();
+      await insertRecurringExpense(newBill);
+      await refreshPlanData();
       alert(`"${suggestion.description}" has been added to your commitments!`);
     } catch (e) {
       alert('Failed to register subscription: ' + e);
@@ -216,9 +216,9 @@ export default function PlanScreen() {
         { 
           text: 'Remove', 
           style: 'destructive',
-          onPress: () => {
-            deleteRecurringExpense(id);
-            refreshPlanData();
+          onPress: async () => {
+            await deleteRecurringExpense(id);
+            await refreshPlanData();
           }
         }
       ]
@@ -488,6 +488,7 @@ const styles = StyleSheet.create({
     borderRadius: CornerRadius.medium,
     borderWidth: 1,
     marginBottom: Spacing.three,
+    minHeight: 140,
   },
   sectionHeader: {
     fontSize: 11,

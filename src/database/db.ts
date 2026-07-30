@@ -4,76 +4,72 @@ import { SCHEMA_TABLES, SCHEMA_INDEXES } from './schema';
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 
 /**
- * Open or retrieve the open instance of the SQLite database
+ * Open or retrieve the open asynchronous instance of the SQLite database
  */
-export function getDB(): SQLite.SQLiteDatabase {
+export async function getDB(): Promise<SQLite.SQLiteDatabase> {
   if (!dbInstance) {
-    dbInstance = SQLite.openDatabaseSync('expenses.db');
+    dbInstance = await SQLite.openDatabaseAsync('expenses.db');
   }
   return dbInstance;
 }
 
 /**
- * Initialize the database schema and indexes in a synchronous transaction
+ * Initialize the database schema and indexes asynchronously
  */
-export function initDatabase(): void {
-  const db = getDB();
+export async function initDatabase(): Promise<void> {
+  const db = await getDB();
   try {
-    db.withTransactionSync(() => {
-      // Create tables
-      for (const tableSql of SCHEMA_TABLES) {
-        db.execSync(tableSql);
-      }
-      // Create indexes
-      for (const indexSql of SCHEMA_INDEXES) {
-        db.execSync(indexSql);
-      }
-    });
-    console.log('[Database] Initialization completed successfully');
+    // Execute table creations sequentially
+    for (const tableSql of SCHEMA_TABLES) {
+      await db.execAsync(tableSql);
+    }
+    // Execute index creations sequentially
+    for (const indexSql of SCHEMA_INDEXES) {
+      await db.execAsync(indexSql);
+    }
+    console.log('[Database] Async initialization completed successfully');
   } catch (error) {
-    console.error('[Database] Initialization error:', error);
+    console.error('[Database] Async initialization error:', error);
     throw error;
   }
 }
 
 /**
- * Helper to run a SELECT query and return all matching rows.
+ * Helper to run a SELECT query and return all matching rows asynchronously.
  */
-export function queryAll<T>(sql: string, params: any[] = []): T[] {
-  const db = getDB();
-  return db.getAllSync<T>(sql, params);
+export async function queryAll<T>(sql: string, params: any[] = []): Promise<T[]> {
+  const db = await getDB();
+  return db.getAllAsync<T>(sql, params);
 }
 
 /**
- * Helper to run a SELECT query that returns at most one row.
+ * Helper to run a SELECT query that returns at most one row asynchronously.
  */
-export function queryOne<T>(sql: string, params: any[] = []): T | null {
-  const db = getDB();
-  return db.getFirstSync<T>(sql, params);
+export async function queryOne<T>(sql: string, params: any[] = []): Promise<T | null> {
+  const db = await getDB();
+  return db.getFirstAsync<T>(sql, params);
 }
 
 /**
- * Helper to execute an INSERT, UPDATE, or DELETE query.
+ * Helper to execute an INSERT, UPDATE, or DELETE query asynchronously.
  */
-export function execute(sql: string, params: any[] = []): SQLite.SQLiteRunResult {
-  const db = getDB();
-  return db.runSync(sql, params);
+export async function execute(sql: string, params: any[] = []): Promise<SQLite.SQLiteRunResult> {
+  const db = await getDB();
+  return db.runAsync(sql, params);
 }
 
 /**
- * Reset database - Wipe all tables (Required for Privacy Compliance)
+ * Reset database - Wipe all tables asynchronously (Required for Privacy Compliance)
  */
-export function wipeDatabase(): void {
-  const db = getDB();
+export async function wipeDatabase(): Promise<void> {
+  const db = await getDB();
   try {
-    db.withTransactionSync(() => {
-      db.execSync('DELETE FROM expenses;');
-      db.execSync('DELETE FROM budgets;');
-      db.execSync('DELETE FROM budget_categories;');
-      db.execSync('DELETE FROM savings_goals;');
-      db.execSync('DELETE FROM recurring_expenses;');
-      db.execSync('DELETE FROM settings;');
-    });
+    await db.execAsync('DELETE FROM expenses;');
+    await db.execAsync('DELETE FROM budgets;');
+    await db.execAsync('DELETE FROM budget_categories;');
+    await db.execAsync('DELETE FROM savings_goals;');
+    await db.execAsync('DELETE FROM recurring_expenses;');
+    await db.execAsync('DELETE FROM settings;');
     console.log('[Database] All user data has been wiped.');
   } catch (error) {
     console.error('[Database] Failed to wipe database:', error);

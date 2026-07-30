@@ -10,12 +10,12 @@ interface SettingsState {
   isLoading: boolean;
   
   // Actions
-  loadSettings: () => void;
-  setCurrency: (currency: string) => void;
-  setMonthlyIncome: (income: number) => void;
-  setMonthlySavingsGoal: (goal: number) => void;
-  setOnboardingCompleted: (completed: boolean) => void;
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  loadSettings: () => Promise<void>;
+  setCurrency: (currency: string) => Promise<void>;
+  setMonthlyIncome: (income: number) => Promise<void>;
+  setMonthlySavingsGoal: (goal: number) => Promise<void>;
+  setOnboardingCompleted: (completed: boolean) => Promise<void>;
+  setTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
   resetAllSettings: () => void;
 }
 
@@ -27,13 +27,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   theme: 'system',
   isLoading: true,
 
-  loadSettings: () => {
+  loadSettings: async () => {
     try {
-      const currency = getSetting('currency', '$');
-      const monthlyIncome = parseFloat(getSetting('monthlyIncome', '0'));
-      const monthlySavingsGoal = parseFloat(getSetting('monthlySavingsGoal', '0'));
-      const onboardingCompleted = getSetting('onboardingCompleted', 'false') === 'true';
-      const theme = getSetting('theme', 'system') as 'light' | 'dark' | 'system';
+      const currency = await getSetting('currency', '$');
+      const monthlyIncome = parseFloat(await getSetting('monthlyIncome', '0'));
+      const monthlySavingsGoal = parseFloat(await getSetting('monthlySavingsGoal', '0'));
+      const onboardingCompleted = (await getSetting('onboardingCompleted', 'false')) === 'true';
+      const theme = (await getSetting('theme', 'system')) as 'light' | 'dark' | 'system';
 
       set({
         currency,
@@ -49,28 +49,28 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
-  setCurrency: (currency) => {
-    setSetting('currency', currency);
+  setCurrency: async (currency) => {
+    await setSetting('currency', currency);
     set({ currency });
   },
 
-  setMonthlyIncome: (income) => {
-    setSetting('monthlyIncome', income.toString());
+  setMonthlyIncome: async (income) => {
+    await setSetting('monthlyIncome', income.toString());
     set({ monthlyIncome: income });
   },
 
-  setMonthlySavingsGoal: (goal) => {
-    setSetting('monthlySavingsGoal', goal.toString());
+  setMonthlySavingsGoal: async (goal) => {
+    await setSetting('monthlySavingsGoal', goal.toString());
     set({ monthlySavingsGoal: goal });
   },
 
-  setOnboardingCompleted: (completed) => {
-    setSetting('onboardingCompleted', completed ? 'true' : 'false');
+  setOnboardingCompleted: async (completed) => {
+    await setSetting('onboardingCompleted', completed ? 'true' : 'false');
     set({ onboardingCompleted: completed });
   },
 
-  setTheme: (theme) => {
-    setSetting('theme', theme);
+  setTheme: async (theme) => {
+    await setSetting('theme', theme);
     set({ theme });
   },
 

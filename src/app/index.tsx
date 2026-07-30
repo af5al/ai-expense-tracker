@@ -95,24 +95,24 @@ export default function HomeScreen() {
     weeklyLimit - spentThisWeek - recurringDueThisWeek - weeklySavingsContribution
   );
 
-  const refreshDashboard = useCallback(() => {
+  const refreshDashboard = useCallback(async () => {
     try {
       // 1. Fetch spending aggregates
-      const todayTotal = getSpentToday();
-      const weekTotal = getSpentThisWeek();
-      const todayCats = getSpentTodayByCategory();
+      const todayTotal = await getSpentToday();
+      const weekTotal = await getSpentThisWeek();
+      const todayCats = await getSpentTodayByCategory();
 
       setSpentToday(todayTotal);
       setSpentThisWeek(weekTotal);
       setTodayCategories(todayCats);
 
       // 2. Fetch active savings goals and calculate weekly rates
-      const activeGoals = getGoals();
+      const activeGoals = await getGoals();
       const weeklySavings = calculateWeeklyGoalContributions(activeGoals);
       setWeeklySavingsContribution(weeklySavings);
 
       // 3. Fetch active recurring bills and sum those due this week
-      const bills = getRecurringExpenses(true);
+      const bills = await getRecurringExpenses(true);
       const billsDue = getRecurringDueThisWeekAmount(bills);
       setRecurringDueThisWeek(billsDue);
 
@@ -330,6 +330,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: '800',
     marginVertical: Spacing.one,
+    lineHeight: 48,
   },
   cardExplanation: {
     fontSize: 12,

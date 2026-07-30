@@ -34,9 +34,9 @@ export default function SettingsScreen() {
         { 
           text: 'Wipe Everything', 
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             try {
-              wipeDatabase();
+              await wipeDatabase();
               resetAllSettings();
               alert('All local data has been successfully deleted.');
               router.replace('/');
@@ -49,8 +49,8 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleCompleteOnboarding = () => {
-    setOnboardingCompleted(true);
+  const handleCompleteOnboarding = async () => {
+    await setOnboardingCompleted(true);
     alert('Onboarding preferences updated successfully!');
     router.replace('/');
   };
@@ -73,7 +73,7 @@ export default function SettingsScreen() {
             {CURRENCY_OPTIONS.map((curr) => (
               <Pressable
                 key={curr}
-                onPress={() => setCurrency(curr)}
+                onPress={async () => { await setCurrency(curr); }}
                 style={[styles.currencyButton, {
                   borderColor: theme.border,
                   backgroundColor: currency === curr ? theme.primaryLight : theme.background,
@@ -132,7 +132,7 @@ export default function SettingsScreen() {
             {(['light', 'dark', 'system'] as const).map((t) => (
               <Pressable
                 key={t}
-                onPress={() => setTheme(t)}
+                onPress={async () => { await setTheme(t); }}
                 style={[styles.themeOptionButton, {
                   borderColor: theme.border,
                   backgroundColor: activeTheme === t ? theme.primaryLight : theme.background,

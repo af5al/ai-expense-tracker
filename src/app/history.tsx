@@ -27,9 +27,9 @@ export default function HistoryScreen() {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   // Fetch from DB
-  const refreshExpenses = useCallback(() => {
+  const refreshExpenses = useCallback(async () => {
     try {
-      const list = getExpenses({
+      const list = await getExpenses({
         search: searchQuery.trim() || undefined,
         category: selectedCategory || undefined,
       });
@@ -56,10 +56,10 @@ export default function HistoryScreen() {
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             try {
-              deleteExpense(id);
-              refreshExpenses();
+              await deleteExpense(id);
+              await refreshExpenses();
             } catch (e) {
               alert('Failed to delete expense: ' + e);
             }
@@ -80,7 +80,7 @@ export default function HistoryScreen() {
   };
 
   // Save Edit Action
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingExpense) return;
     
     const parsedAmount = parseFloat(editAmount);
@@ -103,10 +103,10 @@ export default function HistoryScreen() {
     };
 
     try {
-      updateExpense(updated);
+      await updateExpense(updated);
       setIsEditModalVisible(false);
       setEditingExpense(null);
-      refreshExpenses();
+      await refreshExpenses();
     } catch (e) {
       alert('Failed to update expense: ' + e);
     }

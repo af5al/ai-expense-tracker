@@ -1,15 +1,17 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { Colors } from '@/constants/theme';
 import { initDatabase } from '@/database/db';
 import { useSettingsStore } from '@/stores/settingsStore';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch((e) => {
+  console.warn('[RootLayout] preventAutoHideAsync error:', e);
+});
 
 export default function RootLayout() {
   const systemColorScheme = useColorScheme();
@@ -18,16 +20,32 @@ export default function RootLayout() {
 
   // Initialize SQLite database and load settings on startup
   useEffect(() => {
-    try {
-      initDatabase();
-      loadSettings();
-      setDbReady(true);
-    } catch (error) {
-      console.error('[RootLayout] Critical startup failure:', error);
-      // Fallback: still set dbReady true so the app does not freeze
-      setDbReady(true);
+    async function startApp() {
+      try {
+        await initDatabase();
+        await loadSettings();
+        setDbReady(true);
+      } catch (error) {
+        console.error('[RootLayout] Critical startup failure:', error);
+        // Fallback: still set dbReady true so the app does not freeze
+        setDbReady(true);
+      }
     }
+    startApp();
   }, [loadSettings]);
+
+  // Hide splash screen once database is ready and settings have loaded
+  useEffect(() => {
+    console.log('[RootLayout] Splash lifecycle status - isLoading:', isLoading, 'dbReady:', dbReady);
+    if (!isLoading && dbReady) {
+      console.log('[RootLayout] Hiding native splash screen...');
+      SplashScreen.hideAsync()
+        .then(() => console.log('[RootLayout] Native splash screen hidden successfully'))
+        .catch((err) => {
+          console.warn('[RootLayout] Failed to hide splash screen:', err);
+        });
+    }
+  }, [isLoading, dbReady]);
 
   // Determine active theme based on user settings (light, dark, or system default)
   const activeScheme = theme === 'system' ? systemColorScheme : theme;
@@ -67,8 +85,6 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={activeScheme === 'dark' ? customDarkTheme : customLightTheme}>
-      <AnimatedSplashOverlay />
-      
       <Tabs
         screenOptions={{
           headerShown: true,
@@ -169,12 +185,6 @@ export default function RootLayout() {
           }}
         />
 
-        <Tabs.Screen
-          name="explore"
-          options={{
-            href: null, // Hide template default explore.tsx screen
-          }}
-        />
       </Tabs>
     </ThemeProvider>
   );
