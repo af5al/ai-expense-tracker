@@ -12,7 +12,7 @@
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://your-deployed-api.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://ai-expense-tracker-six-sable.vercel.app/"
       }
     }
   },

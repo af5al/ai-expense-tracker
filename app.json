@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.af5al.expensetracker"
+      "bundleIdentifier": "com.af5al.expensetracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.af5al.expensetracker",
@@ -40,6 +43,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "504412e4-1e30-4610-a29a-9b8f575ff358"
+      }
     }
   }
 }
